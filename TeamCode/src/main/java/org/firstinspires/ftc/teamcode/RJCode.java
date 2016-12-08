@@ -44,8 +44,7 @@ public class RJCode extends LinearOpMode {
     boolean rightBeaconCurrent;
     boolean rightBeaconPrevious;
 
-    double expoCurve = 1.0;
-
+    double expoCurve    = 1.0;
     double deadZoneArea = 0.2;
 
     boolean current;
@@ -112,6 +111,7 @@ public class RJCode extends LinearOpMode {
         }
 
     }
+
     public void drive(double x, double y, double z){
 
         backLeft.setPower(expo(constrain(x - y  - z),expoCurve));
@@ -140,6 +140,12 @@ public class RJCode extends LinearOpMode {
         else{speed = 0.0;}
 
         shooter.setPower(speed);
+
+    }
+
+    public void intakeAndUptake(){
+
+        //TODO code the intake and uptake
 
     }
 
