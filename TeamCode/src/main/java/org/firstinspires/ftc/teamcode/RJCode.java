@@ -54,6 +54,7 @@ public class RJCode extends LinearOpMode {
     //uptake and intake
     private double  inUpSpeed;
     private double  inUpStop;
+    private double  setInUp;
     private boolean inUpTakeButton;
     private boolean inUpTakeCurrent;
     private boolean inUpTakePrevious;
@@ -88,7 +89,7 @@ public class RJCode extends LinearOpMode {
         driveRotate  = gamepad1.right_stick_x;
 
         //SHOOTER VARIABLES
-        shooterButton           = gamepad1.right_bumper;
+        shooterButton           = false;
         shooterSpeed            = 1.0;
         shooterPosition         = 1000; //TODO find the position for shooter
         currentShootPosition    = shooter.getCurrentPosition();
@@ -97,15 +98,16 @@ public class RJCode extends LinearOpMode {
         //BEACON BUTTON VARIABLES
         beaconPositionIn    = 0.0;
         beaconPositionOut   = 1.0; //TODO find the position of the beacon button servos
-        leftBeaconButton    = gamepad1.x;
-        rightBeaconButton   = gamepad1.b;
+        leftBeaconButton    = false;
+        rightBeaconButton   = false;
         leftBeaconCurrent   = false;
         rightBeaconCurrent  = false;
 
         //INTAKE AND UPTAKE VARIABLES
-        inUpSpeed   = 1.0;
-        inUpStop    = 0.0;
-
+        inUpSpeed       = 1.0;
+        inUpStop        = 0.0;
+        setInUp       = inUpStop;
+        inUpTakeButton  = gamepad1.a;
 
         //VARIABLES FOR OTHER METHODS
         current     = false;
@@ -122,15 +124,25 @@ public class RJCode extends LinearOpMode {
         //our main teleop loop
         while(opModeIsActive()) {
 
+            driveUpDate();
             drive(driveRotate, driveY, driveX);
             shooter();
             beacon();
+            intakeAndUptake();
 
             debug();
 
             idle();
 
         }
+
+    }
+
+    public void driveUpDate(){
+
+        driveX       = gamepad1.left_stick_x;
+        driveY       = gamepad1.left_stick_y;
+        driveRotate  = gamepad1.right_stick_x;
 
     }
 
@@ -146,6 +158,7 @@ public class RJCode extends LinearOpMode {
     private void shooter(){
 
         double speed;
+        shooterButton = gamepad1.right_bumper;
         currentShootPosition = shooter.getCurrentPosition();
 
         if(currentShootPosition - previousShootPosition <= shooterPosition){
@@ -168,30 +181,31 @@ public class RJCode extends LinearOpMode {
     public void intakeAndUptake(){
 
         //TODO code the intake and uptake
-        double speed;
-        speed = inUpStop;
-        inUpTakeCurrent = gamepad1.a;
+        setInUp         = inUpStop;
+        inUpTakeCurrent = inUpTakeButton;
 
-        if(inUpTakeCurrent && !inUpTakePrevious && speed == inUpStop){
+        if(inUpTakeCurrent && !inUpTakePrevious && setInUp == inUpStop){
 
-            speed = inUpSpeed;
+            setInUp = inUpSpeed;
 
         }
 
-        else if(inUpTakeCurrent && !inUpTakePrevious && speed == inUpSpeed){
+        else if(inUpTakeCurrent && !inUpTakePrevious && setInUp == inUpSpeed){
 
-            speed = inUpStop;
+            setInUp = inUpStop;
 
         }
 
        else if(gamepad1.y){
 
-            intake.setPower(-speed);
+            intake.setPower(-setInUp);
+            uptake.setPower(-setInUp);
 
         }
         else{
 
-            intake.setPower(speed);
+            intake.setPower(setInUp);
+            uptake.setPower(setInUp);
 
         }
 
@@ -200,6 +214,9 @@ public class RJCode extends LinearOpMode {
     }
 
     private void beacon(){
+
+        leftBeaconButton = gamepad1.x;
+        rightBeaconButton = gamepad1.b;
 
         leftBeaconCurrent   = leftBeaconButton;
         rightBeaconCurrent  = rightBeaconButton;
