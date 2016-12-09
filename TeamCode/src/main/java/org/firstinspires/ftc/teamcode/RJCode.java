@@ -27,7 +27,6 @@ public class RJCode extends LinearOpMode {
     private Servo   leftButtonServo;
     private Servo   scissorLiftServo;
     private Servo   loadFront;
-    private Servo   loadBack;
 
     //gamepad
     private double  driveY;
@@ -59,6 +58,19 @@ public class RJCode extends LinearOpMode {
     private boolean inUpTakeCurrent;
     private boolean inUpTakePrevious;
 
+    //reload
+    private double  loadFrontPosUp;
+    private double  loadFrontPosDown;
+    private double  loadFrontTime;
+    private boolean loadIsReady;
+    private boolean loadButton;
+    private boolean loadCurrentPress;
+    private boolean loadPreviousPress;
+
+
+    //various tools
+    private double currentTime;
+
     private double  expoCurve      = 1.0;
     private double  deadZoneArea   = 0.2;
 
@@ -81,7 +93,6 @@ public class RJCode extends LinearOpMode {
         leftButtonServo     = hardwareMap.servo.get("LEFT_BUTTON");
         scissorLiftServo    = hardwareMap.servo.get("SCISSOR_SERVO");
         loadFront           = hardwareMap.servo.get("LOAD_FRONT");
-        loadBack            = hardwareMap.servo.get("LOAD_BACK");
 
         //MECANUM DRIVE
         driveX       = gamepad1.left_stick_x;
@@ -106,8 +117,17 @@ public class RJCode extends LinearOpMode {
         //INTAKE AND UPTAKE VARIABLES
         inUpSpeed       = 1.0;
         inUpStop        = 0.0;
-        setInUp       = inUpStop;
+        setInUp         = inUpStop;
         inUpTakeButton  = gamepad1.a;
+
+        //RELOAD VARIABLES
+        loadFrontPosUp      = 0.0; //TODO find the time and position for reloading
+        loadFrontPosDown    = 1.0;
+        loadFrontTime       = 5.0;
+        loadIsReady         = false;
+        loadButton          = false;
+        loadCurrentPress    = false;
+        loadPreviousPress   = false;
 
         //VARIABLES FOR OTHER METHODS
         current     = false;
@@ -127,6 +147,7 @@ public class RJCode extends LinearOpMode {
             driveUpDate();
             drive(driveRotate, driveY, driveX);
             shooter();
+            reload();
             beacon();
             intakeAndUptake();
 
@@ -138,7 +159,7 @@ public class RJCode extends LinearOpMode {
 
     }
 
-    public void driveUpDate(){
+    private void driveUpDate(){
 
         driveX       = gamepad1.left_stick_x;
         driveY       = gamepad1.left_stick_y;
@@ -178,7 +199,30 @@ public class RJCode extends LinearOpMode {
 
     }
 
-    public void intakeAndUptake(){
+    private void reload(){
+
+        loadButton       = gamepad1.left_bumper;
+        loadCurrentPress = loadButton;
+
+        if(loadCurrentPress && !loadPreviousPress){
+
+            loadIsReady = true;
+
+        }
+
+        if(loadIsReady){
+
+            delayServoPosition(loadFrontTime, loadFront, loadFrontPosUp, loadFrontPosDown, loadIsReady);
+
+        }
+
+        else if(!loadIsReady){loadFront.setPosition(loadFrontPosDown);}
+
+        loadPreviousPress = loadCurrentPress;
+
+    }
+
+    private void intakeAndUptake(){
 
         //TODO code the intake and uptake
         setInUp         = inUpStop;
@@ -247,6 +291,8 @@ public class RJCode extends LinearOpMode {
 
     }
 
+    //TOOLS AND MATHS
+
     private void deadZone(){
 
         double x = Math.abs(gamepad1.left_stick_x);
@@ -297,6 +343,28 @@ public class RJCode extends LinearOpMode {
 
     }
 
+    private void delayMotorSpeed(double time, DcMotor motor1, double speed){
+
+        currentTime = getRuntime();
+
+        while(getRuntime() - currentTime < time){
+
+            motor1.setPower(speed);
+
+        }
+
+
+    }
+
+    private boolean delayServoPosition(double time, Servo servo1, double position1, double position2, boolean isReady){
+
+        currentTime = getRuntime();
+
+        if(getRuntime() - currentTime < time){servo1.setPosition(position1);}
+        else{servo1.setPosition(position2);}
+
+        return isReady;
+    }
 
     private void debug() {
 
