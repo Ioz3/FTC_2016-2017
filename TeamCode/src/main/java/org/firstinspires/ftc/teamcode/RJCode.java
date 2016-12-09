@@ -372,6 +372,7 @@ public class RJCode extends LinearOpMode {
         telemetry.addData("MOTOR_STUFF_FL", frontLeft.getPower());
         telemetry.addData("MOTOR_STUFF_BR", backRight.getPower());
         telemetry.addData("MOTOR_STUFF_BL", backLeft.getPower());
+        telemetry.addData("FRONT_LEFT", frontLeft.getCurrentPosition());
         telemetry.update();
 
     }
