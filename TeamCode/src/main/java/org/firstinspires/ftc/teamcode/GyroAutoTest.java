@@ -180,6 +180,7 @@ public class GyroAutoTest extends LinearOpMode {
             telemetry.addData("3", "Y av. %03d", yVal);
             telemetry.addData("4", "Z av. %03d", zVal);
             telemetry.update();
+
         }
 
 
@@ -190,5 +191,6 @@ public class GyroAutoTest extends LinearOpMode {
         backLeft   = hardwareMap.dcMotor.get("BACK_LEFT");
         backRight  = hardwareMap.dcMotor.get("BACK_RIGHT");
         gyro       = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("GYRO");
+
     }
 }

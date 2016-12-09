@@ -13,42 +13,56 @@ import java.lang.Math;
 @TeleOp(name = "RJCODE", group = "TeleOp")
 public class RJCode extends LinearOpMode {
 
+    //motor
     DcMotor frontRight;
     DcMotor frontLeft;
     DcMotor backRight;
     DcMotor backLeft;
-    DcMotor uptake;
-    DcMotor intake;
-    DcMotor shooter;
+    private DcMotor uptake;
+    private DcMotor intake;
+    private DcMotor shooter;
 
-    Servo rightButtonServo;
-    Servo leftButtonServo;
-    Servo scissorLiftServo;
+    //servo
+    private Servo   rightButtonServo;
+    private Servo   leftButtonServo;
+    private Servo   scissorLiftServo;
+    private Servo   loadFront;
+    private Servo   loadBack;
 
-    double driveY;
-    double driveX;
-    double driveRotate;
+    //gamepad
+    private double  driveY;
+    private double  driveX;
+    private double  driveRotate;
 
-    boolean shooterButton;
-    double shooterSpeed;
-    int shooterPosition;
-    int currentShootPosition;
-    int previousShootPosition;
+    //shooter
+    private boolean shooterButton;
+    private double  shooterSpeed;
+    private int     shooterPosition;
+    private int     currentShootPosition;
+    private int     previousShootPosition;
 
-    double beaconPositionIn;
-    double beaconPositionOut;
-    boolean leftBeaconButton;
-    boolean rightBeaconButton;
-    boolean leftBeaconCurrent;
-    boolean leftBeaconPrevious;
-    boolean rightBeaconCurrent;
-    boolean rightBeaconPrevious;
+    //beacon
+    private double  beaconPositionIn;
+    private double  beaconPositionOut;
+    private boolean leftBeaconButton;
+    private boolean rightBeaconButton;
+    private boolean leftBeaconCurrent;
+    private boolean leftBeaconPrevious;
+    private boolean rightBeaconCurrent;
+    private boolean rightBeaconPrevious;
 
-    double expoCurve    = 1.0;
-    double deadZoneArea = 0.2;
+    //uptake and intake
+    private double  inUpSpeed;
+    private double  inUpStop;
+    private boolean inUpTakeButton;
+    private boolean inUpTakeCurrent;
+    private boolean inUpTakePrevious;
 
-    boolean current;
-    boolean previous;
+    private double  expoCurve      = 1.0;
+    private double  deadZoneArea   = 0.2;
+
+    private boolean current;
+    private boolean previous;
 
     public void roboInit(){
 
@@ -65,6 +79,8 @@ public class RJCode extends LinearOpMode {
         rightButtonServo    = hardwareMap.servo.get("RIGHT_BUTTON");
         leftButtonServo     = hardwareMap.servo.get("LEFT_BUTTON");
         scissorLiftServo    = hardwareMap.servo.get("SCISSOR_SERVO");
+        loadFront           = hardwareMap.servo.get("LOAD_FRONT");
+        loadBack            = hardwareMap.servo.get("LOAD_BACK");
 
         //MECANUM DRIVE
         driveX       = gamepad1.left_stick_x;
@@ -86,6 +102,11 @@ public class RJCode extends LinearOpMode {
         leftBeaconCurrent   = false;
         rightBeaconCurrent  = false;
 
+        //INTAKE AND UPTAKE VARIABLES
+        inUpSpeed   = 1.0;
+        inUpStop    = 0.0;
+
+
         //VARIABLES FOR OTHER METHODS
         current     = false;
         previous    = false;
@@ -98,6 +119,7 @@ public class RJCode extends LinearOpMode {
 
         waitForStart();
 
+        //our main teleop loop
         while(opModeIsActive()) {
 
             drive(driveRotate, driveY, driveX);
@@ -121,7 +143,7 @@ public class RJCode extends LinearOpMode {
 
     }
 
-    public void shooter(){
+    private void shooter(){
 
         double speed;
         currentShootPosition = shooter.getCurrentPosition();
@@ -146,10 +168,38 @@ public class RJCode extends LinearOpMode {
     public void intakeAndUptake(){
 
         //TODO code the intake and uptake
+        double speed;
+        speed = inUpStop;
+        inUpTakeCurrent = gamepad1.a;
+
+        if(inUpTakeCurrent && !inUpTakePrevious && speed == inUpStop){
+
+            speed = inUpSpeed;
+
+        }
+
+        else if(inUpTakeCurrent && !inUpTakePrevious && speed == inUpSpeed){
+
+            speed = inUpStop;
+
+        }
+
+       else if(gamepad1.y){
+
+            intake.setPower(-speed);
+
+        }
+        else{
+
+            intake.setPower(speed);
+
+        }
+
+        inUpTakePrevious = inUpTakeCurrent;
 
     }
 
-    public void beacon(){
+    private void beacon(){
 
         leftBeaconCurrent   = leftBeaconButton;
         rightBeaconCurrent  = rightBeaconButton;
@@ -180,7 +230,7 @@ public class RJCode extends LinearOpMode {
 
     }
 
-    public void deadZone(){
+    private void deadZone(){
 
         double x = Math.abs(gamepad1.left_stick_x);
         double y = Math.abs(gamepad1.left_stick_y);
@@ -196,7 +246,7 @@ public class RJCode extends LinearOpMode {
         }
     }
 
-    double expo(double x, double a){
+    private double expo(double x, double a){
 
         double y = x;
         y = a * Math.pow(y, 3) + (1-a)*y;
@@ -237,6 +287,7 @@ public class RJCode extends LinearOpMode {
         telemetry.addData("MOTOR_STUFF_FL", frontLeft.getPower());
         telemetry.addData("MOTOR_STUFF_BR", backRight.getPower());
         telemetry.addData("MOTOR_STUFF_BL", backLeft.getPower());
+        telemetry.update();
 
     }
 }
