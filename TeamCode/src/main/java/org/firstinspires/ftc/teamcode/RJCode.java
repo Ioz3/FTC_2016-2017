@@ -92,6 +92,14 @@ public class RJCode extends LinearOpMode {
         uptake      = hardwareMap.dcMotor.get("UPTAKE");
         shooter     = hardwareMap.dcMotor.get("SHOOTER");
 
+        //ENCODER TURN OFF
+        frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        uptake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         //SERVO INIT
         rightButtonServo    = hardwareMap.servo.get("RIGHT_BUTTON");
         leftButtonServo     = hardwareMap.servo.get("LEFT_BUTTON");
