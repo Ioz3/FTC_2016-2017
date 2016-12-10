@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -26,6 +28,13 @@ public class RJAuto extends LinearOpMode {
     private Servo   leftButtonServo;
     private Servo   loadFront;
 
+    //gyro
+    ModernRoboticsI2cGyro gyro;
+
+    //color sensor
+    ColorSensor lineColor;
+    ColorSensor beaconColor;
+
     //encoders
     static final double     COUNTS_PER_MOTOR_REV    = 420;
     static final double     DRIVE_GEAR_REDUCTION    = 1.0;     // This is < 1.0 if geared UP
@@ -45,6 +54,8 @@ public class RJAuto extends LinearOpMode {
     //beacon
     private double  beaconPositionIn;
     private double  beaconPositionOut;
+    private int     beaconLineColor;
+    private boolean beaconLine;
 
     //uptake and intake
     private double  inUpGo;
@@ -58,6 +69,12 @@ public class RJAuto extends LinearOpMode {
     private double  loadFrontTime;
     private boolean loadIsReady;
 
+    //gyro rotate
+    private boolean curResetState;
+    private boolean lastResetState;
+    int xVal, yVal, zVal;     // Gyro rate Values
+    int heading;              // Gyro integrated heading
+    int angleZ;
 
     double distanceTraveled;
     double currentTime;
@@ -69,12 +86,14 @@ public class RJAuto extends LinearOpMode {
 
         roboInit();
 
+        gyroInit();
+
         waitForStart();
 
         //our main teleop loop
         while(opModeIsActive()) {
 
-            encoderDrive();
+            beaconSwitchCase();
             debug();
 
             idle();
@@ -99,35 +118,57 @@ public class RJAuto extends LinearOpMode {
         leftButtonServo     = hardwareMap.servo.get("LEFT_BUTTON");
         loadFront           = hardwareMap.servo.get("LOAD_FRONT");
 
+        //GYRO INIT
+        gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("GYRO");
+
+        //COLOR SENSOR
+        lineColor   = hardwareMap.colorSensor.get("LINE_COLOR");
+        beaconColor = hardwareMap.colorSensor.get("BEACON_COLOR");
+
+        //BEACON
+        beaconPositionIn    = 0.0; //TODO set inital positions
+        beaconPositionOut   = 0.0;
+        beaconLine          = false;
+        beaconLineColor     = 0; //find the color of the line
+
+        //GYRO ROTATE
+        curResetState   = false;
+        lastResetState  = false;
+        xVal            = 0;
+        yVal            = 0;
+        zVal            = 0;     // Gyro rate Values
+        heading = 0;              // Gyro integrated heading
+        angleZ = 0;
+
     }
 
-    public void encoderDrive(){
+    public void gyroInit(){
 
-        encoderDrive(DRIVE_SPEED,  48,  48, 5.0);
+        telemetry.addData(">", "Gyro Calibrating. Do Not move!");
+        telemetry.update();
+        gyro.calibrate();
+
+        while (!isStopRequested() && gyro.isCalibrating()) {
+            sleep(50);
+            idle();
+        }
+
+        telemetry.addData(">", "Gyro Calibrated.  Press Start.");
+        telemetry.update();
+
+        runtime.reset();
 
     }
 
-    public void switchCase(){
+    public void beaconSwitchCase(){
 
         switch(value){
 
-            case 1: drive(-0.5, 0.5, -0.5, 0.5, 2650 );
+            case 1: encoderDrive(DRIVE_SPEED,  48,  48, 5.0);value++;
                 break;
-            case 2: delay(0.5);value++;encoderValue = frontRight.getCurrentPosition();
+            case 2: moveToBeacon(-0.5, 0.5, -0.5, 0.5);
                 break;
-            case 3: drive(-0.5, -0.5 , 0.5, 0.5, 3000);
-                break;
-            case 4: delay(0.5);value++;encoderValue = frontRight.getCurrentPosition();
-                break;
-            case 5:drive(-0.5, 0.5, -0.5, 0.5, 5250);
-                break;
-            case 6:delay(0.5);value++;encoderValue = frontRight.getCurrentPosition();
-                break;
-            case 7:drive(0.5, 0.5, -0.5, -0.5, 6500);
-                break;
-            case 8:delay(0.5);value++;encoderValue = frontRight.getCurrentPosition();
-                break;
-            case 9:drive(0.5, -0.5, 0.5, -0.5, 8000);
+            case 3: delay(0.5);gyroRotate(0.5, 0.5, 0.5, 0.5, 90);
                 break;
             default:frontLeft.setPower(0.0);frontRight.setPower(0.0);backLeft.setPower(0.0);backRight.setPower(0.0);
                 break;
@@ -136,9 +177,13 @@ public class RJAuto extends LinearOpMode {
 
     }
 
-    public void drive(double motorOne, double motorTwo, double motorThree, double motorFour, int distance){
+    public void moveToBeacon(double motorOne, double motorTwo, double motorThree, double motorFour){
 
-        if(Math.abs(frontRight.getCurrentPosition() - encoderValue) <= distance) {
+        //TODO get the values for the lines on the floor
+
+        lineColor.alpha();
+
+        if(!beaconLine) {
             frontRight.setPower(motorOne);
             frontLeft.setPower(motorTwo);
             backRight.setPower(motorThree);
@@ -189,6 +234,8 @@ public class RJAuto extends LinearOpMode {
             runtime.reset();
             frontLeft.setPower(Math.abs(speed));
             frontRight.setPower(Math.abs(speed));
+            backRight.setPower(Math.abs(speed));
+            backLeft.setPower(Math.abs(speed));
 
             // keep looping while we are still active, and there is time left, and both motors are running.
             while (opModeIsActive() &&
@@ -206,6 +253,8 @@ public class RJAuto extends LinearOpMode {
             // Stop all motion;
             frontLeft.setPower(0);
             frontRight.setPower(0);
+            backRight.setPower(0);
+            backLeft.setPower(0);
 
             // Turn off RUN_TO_POSITION
             frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -215,9 +264,58 @@ public class RJAuto extends LinearOpMode {
         }
     }
 
+    public void gyroRotate(double motorOne, double motorTwo, double motorThree, double motorFour, int heading) {
+
+        double gyroOffset = (gyro.getIntegratedZValue()*0.03)-heading;
+
+        if (heading == gyro.getHeading()) {
+            frontRight.setPower(motorOne + gyroOffset);
+            frontLeft.setPower(motorTwo + gyroOffset);
+            backRight.setPower(motorThree + gyroOffset);
+            backLeft.setPower(motorFour + gyroOffset);
+        } else {
+            frontRight.setPower(0.0);
+            frontLeft.setPower(0.0);
+            backRight.setPower(0.0);
+            backLeft.setPower(0.0);
+            value++;
+        }
+    }
+
+    public void gyrostuff(){
+
+        // if the A and B buttons are pressed just now, reset Z heading.
+        curResetState = (gamepad1.a && gamepad1.b);
+        if(curResetState && !lastResetState)  {
+            gyro.resetZAxisIntegrator();
+        }
+        lastResetState = curResetState;
+
+        // get the x, y, and z values (rate of change of angle).
+        xVal = gyro.rawX();
+        yVal = gyro.rawY();
+        zVal = gyro.rawZ();
+
+        // get the heading info.
+        // the Modern Robotics' gyro sensor keeps
+        // track of the current heading for the Z axis only.
+        heading = gyro.getHeading();
+        angleZ  = gyro.getIntegratedZValue();
+
+
+    }
+
     public void debug(){
 
 
+        telemetry.addData(">", "Press A & B to reset Heading.");
+        telemetry.addData("0", "Heading %03d", heading);
+
+        telemetry.addData("CHECK_LINE_COLOR", lineColor.alpha());
+        telemetry.addData("CHECK_RED_COLOR", beaconColor.red());
+        telemetry.addData("CHECK_BLUE_COLOR", beaconColor.blue());
+
+        telemetry.update();
 
     }
 }
