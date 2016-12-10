@@ -28,7 +28,7 @@ public class RJCode extends LinearOpMode {
     private Servo   scissorLiftServo;
     private Servo   loadFront;
 
-    //gamepad
+    //drive train
     private double  driveY;
     private double  driveX;
     private double  driveRotate;
