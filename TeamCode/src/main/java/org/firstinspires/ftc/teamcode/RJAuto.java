@@ -34,17 +34,11 @@ public class RJAuto extends LinearOpMode {
     //beacon
     private double  beaconPositionIn;
     private double  beaconPositionOut;
-    private boolean leftBeaconCurrent;
-    private boolean leftBeaconPrevious;
-    private boolean rightBeaconCurrent;
-    private boolean rightBeaconPrevious;
 
     //uptake and intake
     private double  inUpGo;
     private double  inUpStop;
     private double  setInUp;
-    private boolean inUpTakeCurrent;
-    private boolean inUpTakePrevious;
     private boolean isRunning;
 
     //reload
@@ -52,8 +46,13 @@ public class RJAuto extends LinearOpMode {
     private double  loadFrontPosDown;
     private double  loadFrontTime;
     private boolean loadIsReady;
-    private boolean loadCurrentPress;
-    private boolean loadPreviousPress;
+
+
+    double distanceTraveled;
+    double currentTime;
+
+    int    value = 1;
+    int    encoderValue = 0;
 
     public void runOpMode()  {
 
@@ -87,6 +86,66 @@ public class RJAuto extends LinearOpMode {
         rightButtonServo    = hardwareMap.servo.get("RIGHT_BUTTON");
         leftButtonServo     = hardwareMap.servo.get("LEFT_BUTTON");
         loadFront           = hardwareMap.servo.get("LOAD_FRONT");
+
+    }
+
+    public void switchCase(){
+
+        switch(value){
+
+            case 1: drive(-0.5, 0.5, -0.5, 0.5, 2650 );
+                break;
+            case 2: delay(0.5);value++;encoderValue = frontRight.getCurrentPosition();
+                break;
+            case 3: drive(-0.5, -0.5 , 0.5, 0.5, 3000);
+                break;
+            case 4: delay(0.5);value++;encoderValue = frontRight.getCurrentPosition();
+                break;
+            case 5:drive(-0.5, 0.5, -0.5, 0.5, 5250);
+                break;
+            case 6:delay(0.5);value++;encoderValue = frontRight.getCurrentPosition();
+                break;
+            case 7:drive(0.5, 0.5, -0.5, -0.5, 6500);
+                break;
+            case 8:delay(0.5);value++;encoderValue = frontRight.getCurrentPosition();
+                break;
+            case 9:drive(0.5, -0.5, 0.5, -0.5, 8000);
+                break;
+            default:frontLeft.setPower(0.0);frontRight.setPower(0.0);backLeft.setPower(0.0);backRight.setPower(0.0);
+                break;
+
+        }
+
+    }
+
+    public void drive(double motorOne, double motorTwo, double motorThree, double motorFour, int distance){
+
+        if(Math.abs(frontRight.getCurrentPosition() - encoderValue) <= distance) {
+            frontRight.setPower(motorOne);
+            frontLeft.setPower(motorTwo);
+            backRight.setPower(motorThree);
+            backLeft.setPower(motorFour);
+        }
+        else {
+            frontRight.setPower(0.0);
+            frontLeft.setPower(0.0);
+            backRight.setPower(0.0);
+            backLeft.setPower(0.0);
+            encoderValue = frontRight.getCurrentPosition();
+            value++;
+        }
+
+    }
+
+    public void delay(double time){
+
+        currentTime = getRuntime();
+
+        while(getRuntime() - currentTime < time){
+
+            frontLeft.setPower(0.0);frontRight.setPower(0.0);backLeft.setPower(0.0);backRight.setPower(0.0);
+
+        }
 
     }
 
