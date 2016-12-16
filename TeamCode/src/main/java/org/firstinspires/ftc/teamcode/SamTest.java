@@ -1,14 +1,45 @@
 package org.firstinspires.ftc.teamcode;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-public class SamTest extends OpMode {
+import com.qualcomm.robotcore.hardware.TouchSensor;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
+public class SamTest extends LinearOpMode {
+
     DcMotor motor;
-    public void init () {
-        motor = hardwareMap.dcMotor.get("MOTOR");
+    TouchSensor touchSensor;
+
+    public void roboInit () {
+
+        motor       = hardwareMap.dcMotor.get("MOTOR");
+        touchSensor = hardwareMap.touchSensor.get("sensor_touch");
+
     }
-    public void loop () {
-        motor.setPower(1);
+    public void runOpMode () {
+
+        roboInit();
+
+        waitForStart();
+
+
+        while(opModeIsActive()){
+
+            motor.setPower(1);
+
+            debug();
+
+            idle();
+
+        }
+
+    }
+
+    public void debug(){
+
+        touchSensor.isPressed();
+
     }
 
 }

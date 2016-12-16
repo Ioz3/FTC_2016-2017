@@ -75,6 +75,7 @@ public class RJAuto extends LinearOpMode {
     int xVal, yVal, zVal;     // Gyro rate Values
     int heading;              // Gyro integrated heading
     int angleZ;
+    private double turnPower;
 
     double distanceTraveled;
     double currentTime;
@@ -137,8 +138,9 @@ public class RJAuto extends LinearOpMode {
         xVal            = 0;
         yVal            = 0;
         zVal            = 0;     // Gyro rate Values
-        heading = 0;              // Gyro integrated heading
-        angleZ = 0;
+        heading         = 0;     // Gyro integrated heading
+        angleZ          = 0;
+        turnPower       = 0.03;
 
     }
 
@@ -266,9 +268,9 @@ public class RJAuto extends LinearOpMode {
 
     public void gyroRotate(double motorOne, double motorTwo, double motorThree, double motorFour, int heading) {
 
-        double gyroOffset = (gyro.getIntegratedZValue()*0.03)-heading;
+        double gyroOffset = (gyro.getIntegratedZValue()*turnPower)-heading;
 
-        if (heading == gyro.getHeading()) {
+        if (heading != gyro.getHeading()) {
             frontRight.setPower(motorOne + gyroOffset);
             frontLeft.setPower(motorTwo + gyroOffset);
             backRight.setPower(motorThree + gyroOffset);
