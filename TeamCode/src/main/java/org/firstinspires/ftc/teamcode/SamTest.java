@@ -1,20 +1,23 @@
 package org.firstinspires.ftc.teamcode;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
+@TeleOp(name = "SAMCODE", group = "TeleOp")
 public class SamTest extends LinearOpMode {
 
     DcMotor motor;
     TouchSensor touchSensor;
+    ColorSensor colorSensor;
 
     public void roboInit () {
 
         motor       = hardwareMap.dcMotor.get("MOTOR");
         touchSensor = hardwareMap.touchSensor.get("sensor_touch");
+        colorSensor = hardwareMap.colorSensor.get("color_sensor");
 
     }
     public void runOpMode () {
@@ -26,8 +29,6 @@ public class SamTest extends LinearOpMode {
 
         while(opModeIsActive()){
 
-            motor.setPower(1);
-
             debug();
 
             idle();
@@ -38,7 +39,9 @@ public class SamTest extends LinearOpMode {
 
     public void debug(){
 
-        touchSensor.isPressed();
+        telemetry.addData("touch_sensor_isPressed", touchSensor.isPressed());
+        telemetry.addData("color", colorSensor.alpha());
+        telemetry.update();
 
     }
 
