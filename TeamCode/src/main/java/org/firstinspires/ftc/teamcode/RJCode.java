@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 import java.lang.Math;
@@ -41,8 +42,10 @@ public class RJCode extends LinearOpMode {
     private int     previousShootPosition;
 
     //beacon
-    private double  beaconPositionIn;
-    private double  beaconPositionOut;
+    private double  rBeaconPositionIn;
+    private double  lBeaconPositionIn;
+    private double  rBeaconPositionOut;
+    private double  lBeaconPositionOut;
     private double  rightButtonPosition;
     private double  leftButtonPosition;
     private boolean leftBeaconButton;
@@ -92,6 +95,9 @@ public class RJCode extends LinearOpMode {
         uptake      = hardwareMap.dcMotor.get("UPTAKE");
         shooter     = hardwareMap.dcMotor.get("SHOOTER");
 
+        //MOTOR REVERSE
+        shooter.setDirection(DcMotor.Direction.REVERSE);
+
         //ENCODER TURN OFF
         frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -114,15 +120,17 @@ public class RJCode extends LinearOpMode {
         shooterButton           = false;
         previousShooterButton   = false;
         shooterSpeed            = 1.0;
-        shooterPosition         = 1000; //TODO find the position for shooter
+        shooterPosition         = 3400; //TODO find the position for shooter
         currentShootPosition    = shooter.getCurrentPosition();
         previousShootPosition   = shooter.getCurrentPosition();
 
         //BEACON BUTTON VARIABLES
-        beaconPositionIn    = 0.0;
-        beaconPositionOut   = 1.0; //TODO find the position of the beacon button servos
-        rightButtonPosition = beaconPositionIn;
-        leftButtonPosition  = beaconPositionIn;
+        lBeaconPositionIn    = 0.3;
+        lBeaconPositionOut   = 0.75;
+        rBeaconPositionIn    = 0.75;
+        rBeaconPositionOut   = 0.3; //TODO find the position of the beacon button servos
+        rightButtonPosition = rBeaconPositionIn;
+        leftButtonPosition  = lBeaconPositionIn;
         leftBeaconButton    = false;
         rightBeaconButton   = false;
         leftBeaconCurrent   = false;
@@ -139,7 +147,7 @@ public class RJCode extends LinearOpMode {
         //RELOAD VARIABLES
         loadFrontPosUp      = 0.0; //TODO find the time and position for reloading
         loadFrontPosDown    = 1.0;
-        loadFrontTime       = 5.0;
+        loadFrontTime       = 0.3;
         loadIsReady         = false;
         loadButton          = false;
         loadCurrentPress    = false;
@@ -203,6 +211,7 @@ public class RJCode extends LinearOpMode {
             speed = shooterSpeed;
 
         }
+        //this is where you press the button and it shoots
         else if(currentShootPosition - previousShootPosition >= shooterPosition && shooterButton && !previousShooterButton){
 
             speed                   = shooterSpeed;
@@ -248,7 +257,8 @@ public class RJCode extends LinearOpMode {
         setInUp             = inUpStop;
         inUpTakeCurrent     = inUpTakeButton;
 
-        if(inUpTakeCurrent && !inUpTakePrevious && !isRunning && !gamepad1.y){
+        //this is where you press the button to activate the uptake and intake
+        if(inUpTakeCurrent && !inUpTakePrevious && !isRunning && !gamepad1.y && !gamepad1.start){
 
             isRunning   = true;
 
@@ -293,24 +303,24 @@ public class RJCode extends LinearOpMode {
         leftBeaconCurrent   = leftBeaconButton;
         rightBeaconCurrent  = rightBeaconButton;
 
-        if (leftBeaconCurrent && !leftBeaconPrevious && leftButtonServo.getPosition() == beaconPositionIn){
+        if (leftBeaconCurrent && !leftBeaconPrevious && leftButtonServo.getPosition() == lBeaconPositionIn){
 
-            leftButtonPosition = beaconPositionOut;
-
-        }
-        else if (leftBeaconCurrent && !leftBeaconPrevious && leftButtonServo.getPosition() == beaconPositionOut){
-
-            leftButtonPosition = beaconPositionIn;
+            leftButtonPosition = lBeaconPositionOut;
 
         }
-        if (rightBeaconCurrent && !rightBeaconPrevious && rightButtonServo.getPosition() == beaconPositionIn){
+        else if (leftBeaconCurrent && !leftBeaconPrevious && leftButtonServo.getPosition() == lBeaconPositionOut){
 
-            rightButtonPosition = beaconPositionOut;
+            leftButtonPosition = lBeaconPositionIn;
 
         }
-        else if (rightBeaconCurrent && !rightBeaconPrevious && rightButtonServo.getPosition() == beaconPositionOut){
+        if (rightBeaconCurrent && !rightBeaconPrevious && rightButtonServo.getPosition() == rBeaconPositionIn){
 
-            rightButtonPosition = beaconPositionIn;
+            rightButtonPosition = rBeaconPositionOut;
+
+        }
+        else if (rightBeaconCurrent && !rightBeaconPrevious && rightButtonServo.getPosition() == rBeaconPositionOut){
+
+            rightButtonPosition = rBeaconPositionIn;
 
         }
 
