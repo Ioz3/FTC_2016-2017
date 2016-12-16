@@ -167,7 +167,7 @@ public class RJCode extends LinearOpMode {
         currentRoundTime = getRuntime();
 
         //our main teleop loop
-        while(opModeIsActive() && currentRoundTime < roundTime) {
+        while(opModeIsActive() && getRuntime() - currentRoundTime < roundTime) {
 
             driveUpDate();
             drive(driveRotate, driveY, driveX);
