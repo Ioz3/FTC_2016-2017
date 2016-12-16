@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 import java.lang.Math;
@@ -77,12 +76,10 @@ public class RJCode extends LinearOpMode {
 
     //various tools
     private double currentTime;
-
-    private double  expoCurve      = 1.0;
-    private double  deadZoneArea   = 0.2;
-
-    private boolean current;
-    private boolean previous;
+    private double expoCurve;
+    private double deadZoneArea;
+    private double roundTime;
+    private double currentRoundTime;
 
     public void roboInit(){
 
@@ -120,7 +117,7 @@ public class RJCode extends LinearOpMode {
         shooterButton           = false;
         previousShooterButton   = false;
         shooterSpeed            = 1.0;
-        shooterPosition         = 3400; //TODO find the position for shooter
+        shooterPosition         = 3400;
         currentShootPosition    = shooter.getCurrentPosition();
         previousShootPosition   = shooter.getCurrentPosition();
 
@@ -145,7 +142,7 @@ public class RJCode extends LinearOpMode {
         isRunning           = false;
 
         //RELOAD VARIABLES
-        loadFrontPosUp      = 0.0; //TODO find the time and position for reloading
+        loadFrontPosUp      = 0.0;
         loadFrontPosDown    = 1.0;
         loadFrontTime       = 0.3;
         loadIsReady         = false;
@@ -153,9 +150,11 @@ public class RJCode extends LinearOpMode {
         loadCurrentPress    = false;
         loadPreviousPress   = false;
 
-        //VARIABLES FOR OTHER METHODS
-        current     = false;
-        previous    = false;
+        //VARIABLES FOR OTHER METHODS AND MATHS
+        expoCurve           = 1.0;
+        deadZoneArea        = 0.2;
+        roundTime           = 120.0;
+        currentRoundTime    = 0.0;
 
     }
 
@@ -165,8 +164,10 @@ public class RJCode extends LinearOpMode {
 
         waitForStart();
 
+        currentRoundTime = getRuntime();
+
         //our main teleop loop
-        while(opModeIsActive()) {
+        while(opModeIsActive() && currentRoundTime < roundTime) {
 
             driveUpDate();
             drive(driveRotate, driveY, driveX);
@@ -206,9 +207,13 @@ public class RJCode extends LinearOpMode {
         shooterButton = gamepad1.right_bumper;
         currentShootPosition = shooter.getCurrentPosition();
 
-        if(currentShootPosition - previousShootPosition <= shooterPosition){
+        //TODO set it up so that the arm does not rotate when you start
+                                                                            //-----------this part is new------------\\
+        if(currentShootPosition - previousShootPosition <= shooterPosition && shooterButton && !previousShooterButton){
 
             speed = shooterSpeed;
+            //---------------added this too--------------\\
+            previousShootPosition   = currentShootPosition;
 
         }
         //this is where you press the button and it shoots
@@ -295,7 +300,7 @@ public class RJCode extends LinearOpMode {
 
     }
 
-    private void beacon(){ //todo buttons are not working
+    private void beacon(){
 
         leftBeaconButton    = gamepad1.x;
         rightBeaconButton   = gamepad1.b;
