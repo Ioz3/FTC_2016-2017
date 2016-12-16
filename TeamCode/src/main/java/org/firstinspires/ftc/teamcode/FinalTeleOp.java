@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -22,6 +23,7 @@ import java.lang.Math;
  * and vice verca.
  */
 @TeleOp (name = "FinalTeleOp", group = "TeleOp")
+@Disabled
 public class FinalTeleOp extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();

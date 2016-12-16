@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -9,6 +10,7 @@ import com.qualcomm.robotcore.util.Range;
  * Created by owner on 10/13/2016.
  */
 @TeleOp(name = "TEST", group = "TeleOp")
+@Disabled
 public class MecanumTest extends OpMode {
 
     DcMotor frontRight;

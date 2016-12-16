@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.util.Range;
  * Created by TigeRobots on 11/21/2016.
  */
 @TeleOp(name ="Cayles", group = "TeleOp")
+@Disabled
 public class Cayles extends LinearOpMode {
 
     DcMotor frontRight;

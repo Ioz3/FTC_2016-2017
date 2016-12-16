@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
@@ -9,7 +10,7 @@ import com.qualcomm.robotcore.util.Range;
  * This is a basic teleOp code to be used for
  * testing and debugging purposes
  */
-
+@Disabled
 public class DoodleBob extends LinearOpMode {
 
     DcMotor frontRight;

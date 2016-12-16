@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -11,6 +12,7 @@ import com.qualcomm.robotcore.util.Range;
  * Created by TigeRobots on 11/11/2016.
  */
 @TeleOp(name = "PotatoGyroTest",group = "Sensor")
+@Disabled
 public class PotatoGyroTest extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();

@@ -323,7 +323,6 @@ public class RJCode extends LinearOpMode {
     }
 
     //TOOLS AND MATHS
-
     private void deadZone(){
 
         double x = Math.abs(gamepad1.left_stick_x);

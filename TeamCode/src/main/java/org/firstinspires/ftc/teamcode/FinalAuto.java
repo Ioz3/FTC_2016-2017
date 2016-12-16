@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -11,6 +12,7 @@ import com.qualcomm.robotcore.hardware.Servo;
  * Final Autonomous code for Ftc 2016-2017
  */
 @Autonomous(name = "FinalAuto", group = "Auto")
+@Disabled
 public class FinalAuto extends LinearOpMode {
 
     DcMotor frontRight;

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -9,6 +10,7 @@ import java.lang.Math;
  * Created by owner on 10/14/2016.
  */
 @TeleOp(name = "DEADZONE", group = "TeleOp")
+@Disabled
 public class DeadZoneTest extends OpMode {
 
     DcMotor frontRight;

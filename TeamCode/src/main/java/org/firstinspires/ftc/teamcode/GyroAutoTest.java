@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Created by TigeRobots on 11/11/2016.
  */
 @Autonomous(name = "GyroAutoTest", group = "Sensor")
+@Disabled
 public class GyroAutoTest extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
