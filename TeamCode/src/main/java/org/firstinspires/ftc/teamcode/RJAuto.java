@@ -297,7 +297,6 @@ public class RJAuto extends LinearOpMode {
     }
 
     private void gyroRotate(double speed, int heading) {
-
         while(gyro.getHeading() < heading - headingOffset || gyro.getHeading() > heading + headingOffset){
 
             frontRight.setPower(speed);
