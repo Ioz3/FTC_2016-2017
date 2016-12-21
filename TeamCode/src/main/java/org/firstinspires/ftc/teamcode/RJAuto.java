@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -41,7 +42,7 @@ public class RJAuto extends LinearOpMode {
     TouchSensor rightSwitch;
 
     //encoders
-    static final double     COUNTS_PER_MOTOR_REV    = 420;
+    static final double     COUNTS_PER_MOTOR_REV    = 1680;
     static final double     DRIVE_GEAR_REDUCTION    = 1.0;     // This is < 1.0 if geared UP
     static final double     WHEEL_DIAMETER_INCHES   = 3.94;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
@@ -83,6 +84,7 @@ public class RJAuto extends LinearOpMode {
     private boolean lastResetState;
     int xVal, yVal, zVal;     // Gyro rate Values
     int heading;              // Gyro integrated heading
+    int headingOffset;
     int angleZ;
     private double turnPower;
 
@@ -152,8 +154,9 @@ public class RJAuto extends LinearOpMode {
         yVal            = 0;
         zVal            = 0;     // Gyro rate Values
         heading         = 0;     // Gyro integrated heading
+        headingOffset   = 7;
         angleZ          = 0;
-        turnPower       = 0.03;
+        turnPower       = 0.02;
 
     }
 
@@ -179,11 +182,11 @@ public class RJAuto extends LinearOpMode {
 
         switch(value){
 
-            case 1: encoderDrive(DRIVE_SPEED,  48,  48, 5.0);value++;
+            case 1: encoderDrive(DRIVE_SPEED,  82,  -82, 5.0);value++;
                 break;
-            case 2: moveToBeacon(-0.5, 0.5, -0.5, 0.5);
+            case 2: gyroRotate(-0.5, 270);
                 break;
-            case 3: delay(0.5);gyroRotate(0.5, 0.5, 0.5, 0.5, 90);
+            case 3: encoderDrive(DRIVE_SPEED,  125,  -125, 5.0);value++;//moveToBeacon(-0.5, 0.5, -0.5, 0.5);
                 break;
             default:frontLeft.setPower(0.0);frontRight.setPower(0.0);backLeft.setPower(0.0);backRight.setPower(0.0);
                 break;
@@ -262,8 +265,8 @@ public class RJAuto extends LinearOpMode {
             // reset the timeout time and start motion.
             runtime.reset();
             frontLeft.setPower(Math.abs(speed));
-            frontRight.setPower(Math.abs(speed));
-            backRight.setPower(Math.abs(speed));
+            frontRight.setPower(-speed);
+            backRight.setPower(-speed);
             backLeft.setPower(Math.abs(speed));
 
             // keep looping while we are still active, and there is time left, and both motors are running.
@@ -293,28 +296,57 @@ public class RJAuto extends LinearOpMode {
         }
     }
 
-    private void gyroRotate(double motorOne, double motorTwo, double motorThree, double motorFour, int heading) {
+    private void gyroRotate(double speed, int heading) {
 
-        double gyroOffset = (gyro.getIntegratedZValue()*turnPower)-heading;
+        while(gyro.getHeading() < heading - headingOffset || gyro.getHeading() > heading + headingOffset){
 
-        if (heading != gyro.getHeading()) {
+            frontRight.setPower(speed);
+            frontLeft.setPower(speed);
+            backRight.setPower(speed + stabalizeRobo(heading));
+            backLeft.setPower(speed + stabalizeRobo(heading));
 
-            frontRight.setPower(motorOne + gyroOffset);
-            frontLeft.setPower(motorTwo + gyroOffset);
-            backRight.setPower(motorThree + gyroOffset);
-            backLeft.setPower(motorFour + gyroOffset);
 
         }
 
-        else {
+        frontRight.setPower(0.0);
+        frontLeft.setPower(0.0);
+        backRight.setPower(0.0);
+        backLeft.setPower(0.0);
+        value++;
 
-            frontRight.setPower(0.0);
+    }
+
+    private void moveToWall(double speed){
+
+        leftButton  = leftSwitch.isPressed();
+        rightButton = rightSwitch.isPressed();
+
+        if(!leftButton){
+            frontLeft.setPower(speed);
+            backLeft.setPower(speed);
+        }
+        else if(leftButton){
             frontLeft.setPower(0.0);
-            backRight.setPower(0.0);
             backLeft.setPower(0.0);
-            value++;
-
         }
+        if(!rightButton){
+            frontRight.setPower(-speed);
+            backRight.setPower(-speed);
+        }
+        else if(rightButton){
+            frontRight.setPower(0.0);
+            backRight.setPower(0.0);
+        }
+
+
+    }
+
+    double stabalizeRobo(int heading) {
+
+        double gyroOffset = (gyro.getIntegratedZValue()-heading)*turnPower;
+
+        return gyroOffset;
+
     }
 
     private void gyrostuff(){
@@ -354,8 +386,10 @@ public class RJAuto extends LinearOpMode {
 
     public void debug(){
 
-        telemetry.addData(">", "Press A & B to reset Heading.");
-        telemetry.addData("0", "Heading %03d", heading);
+        telemetry.addData("CASE_NUMBER",value);
+
+        telemetry.addData("HEADING", gyro.getHeading());
+        telemetry.addData("INT_Z", gyro.getIntegratedZValue());
 
         telemetry.addData("CHECK_LINE_COLOR", lineColor.alpha());
         telemetry.addData("CHECK_RED_COLOR", beaconColor.red());

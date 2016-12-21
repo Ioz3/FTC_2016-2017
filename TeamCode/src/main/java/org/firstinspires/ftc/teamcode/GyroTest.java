@@ -12,7 +12,6 @@ import java.lang.Math;
  * Created by owner on 11/10/2016.
  */
 @TeleOp (name = "GyroTest", group = "Sensor")
-@Disabled
 public class GyroTest extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();

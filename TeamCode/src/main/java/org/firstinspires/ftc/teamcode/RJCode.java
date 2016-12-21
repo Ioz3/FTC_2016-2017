@@ -209,11 +209,11 @@ public class RJCode extends LinearOpMode {
 
         //TODO set it up so that the arm does not rotate when you start
                                                                             //-----------this part is new------------\\
-        if(currentShootPosition - previousShootPosition <= shooterPosition && shooterButton && !previousShooterButton){
+        if(currentShootPosition - previousShootPosition <= shooterPosition /*&& shooterButton && !previousShooterButton*/){
 
             speed = shooterSpeed;
             //---------------added this too--------------\\
-            previousShootPosition   = currentShootPosition;
+           // previousShootPosition   = currentShootPosition;
 
         }
         //this is where you press the button and it shoots
