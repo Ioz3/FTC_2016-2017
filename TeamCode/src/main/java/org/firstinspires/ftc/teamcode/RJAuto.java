@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -52,47 +51,37 @@ public class RJAuto extends LinearOpMode {
     private ElapsedTime runtime                     = new ElapsedTime();
 
     //shooter
-    private double  shooterSpeed;
-    private int     shooterPosition;
-    private int     currentShootPosition;
-    private int     previousShootPosition;
+    private double shooterSpeed;
+    private double shooterPosition;
+    private int    currentShootPosition;
+    private int    previousShootPosition;
 
     //beacon
-    private double  beaconPositionIn;
-    private double  beaconPositionOut;
-    private int     beaconLineColor;
-    private boolean beaconLine;
-
-    //uptake and intake
-    private double  inUpGo;
-    private double  inUpStop;
-    private double  setInUp;
-    private boolean isRunning;
-
-    //reload
-    private double  loadFrontPosUp;
-    private double  loadFrontPosDown;
-    private double  loadFrontTime;
-    private boolean loadIsReady;
+    private double  lBeaconPositionIn;
+    private double  lBeaconPositionOut;
+    private double  rBeaconPositionIn;
+    private double  rBeaconPositionOut;
 
     //touch sensor
     private boolean leftButton;
     private boolean rightButton;
 
+    //color sensor
+    private double colorOffset;
+    private double white;
+
     //gyro rotate
     private boolean curResetState;
     private boolean lastResetState;
-    int xVal, yVal, zVal;     // Gyro rate Values
-    int heading;              // Gyro integrated heading
-    int headingOffset;
-    int angleZ;
-    private double turnPower;
+    private int  headingEncoder;
+    private int     headingOffset;
+    private double  turnPower;
 
-    double distanceTraveled;
-    double currentTime;
+    private double currentTime;
+    private double strafeTime;
+    private boolean quickFix;
 
     int    value = 1;
-    int    encoderValue = 0;
 
     public void runOpMode()  {
 
@@ -136,12 +125,25 @@ public class RJAuto extends LinearOpMode {
         //COLOR SENSOR
         lineColor   = hardwareMap.colorSensor.get("LINE_COLOR");
         beaconColor = hardwareMap.colorSensor.get("BEACON_COLOR");
+        beaconColor.enableLed(false);
+        colorOffset = 10;
+        white       = 30.0;
+
+        //TOUCH SENSOR
+        leftSwitch  = hardwareMap.touchSensor.get("LEFT_TOUCH");
+        rightSwitch = hardwareMap.touchSensor.get("RIGHT_TOUCH");
 
         //BEACON
-        beaconPositionIn    = 0.0; //TODO set inital positions
-        beaconPositionOut   = 0.0;
-        beaconLine          = false;
-        beaconLineColor     = 0; //find the color of the line
+        lBeaconPositionIn    = 0.3;
+        lBeaconPositionOut   = 0.75;
+        rBeaconPositionIn    = 0.75;
+        rBeaconPositionOut   = 0.3;
+        rightButtonServo.setPosition(rBeaconPositionIn);
+        leftButtonServo.setPosition(lBeaconPositionIn);
+
+        //SHOOTER
+        shooterSpeed     = 1.0;
+        shooterPosition  = 3400;
 
         //TOUCH SENSOR
         leftButton  = false;
@@ -150,13 +152,13 @@ public class RJAuto extends LinearOpMode {
         //GYRO ROTATE
         curResetState   = false;
         lastResetState  = false;
-        xVal            = 0;
-        yVal            = 0;
-        zVal            = 0;     // Gyro rate Values
-        heading         = 0;     // Gyro integrated heading
+        headingEncoder  = 0;
         headingOffset   = 7;
-        angleZ          = 0;
         turnPower       = 0.02;
+
+        //STRAFE
+        strafeTime  = 0.5;
+        quickFix    = false;
 
     }
 
@@ -182,11 +184,17 @@ public class RJAuto extends LinearOpMode {
 
         switch(value){
 
-            case 1: encoderDrive(DRIVE_SPEED,  82,  -82, 5.0);value++;
+            case 1: encoderDrive(DRIVE_SPEED,  42,  -42, 3.0, headingEncoder);
                 break;
-            case 2: gyroRotate(-0.5, 270);
+            case 2: gyroRotate(-0.5, 280);
                 break;
-            case 3: encoderDrive(DRIVE_SPEED,  125,  -125, 5.0);value++;//moveToBeacon(-0.5, 0.5, -0.5, 0.5);
+            case 3: encoderDrive(DRIVE_SPEED,  55,  -55, 4.0, headingEncoder);
+                break;
+            case 4: moveToWall(0.3);
+                break;
+            case 5: //strafeToLine(0.5,currentTime);
+                break;
+            case 6: //currentTime = getRuntime();while(getRuntime() - currentTime < 5.0)strafe(0.5, "left");value++;
                 break;
             default:frontLeft.setPower(0.0);frontRight.setPower(0.0);backLeft.setPower(0.0);backRight.setPower(0.0);
                 break;
@@ -195,57 +203,125 @@ public class RJAuto extends LinearOpMode {
 
     }
 
-    private void strafeToLine(double motorOne, double motorTwo, double motorThree, double motorFour){
+    private void strafe(double speed, String direction){
 
+        if(direction == "right"){
 
+            frontRight.setPower(speed);
+            backRight.setPower(-speed);
+            frontLeft.setPower(speed);
+            backLeft.setPower(-speed);
 
-
-    }
-
-    private void moveToBeacon(double motorOne, double motorTwo, double motorThree, double motorFour){
-
-        //TODO get the values for the lines on the floor
-
-        rightButton = rightSwitch.isPressed();
-        leftButton  = leftSwitch.isPressed();
-
-        if(!rightButton) {
-            frontRight.setPower(motorOne);
-            backRight.setPower(motorThree);
         }
 
-        else {
+        else if(direction == "left"){
 
-            backRight.setPower(0.0);
+            frontRight.setPower(-speed);
+            backRight.setPower(speed);
+            frontLeft.setPower(-speed);
+            backLeft.setPower(speed);
+
+        }
+
+        else{
+
             frontRight.setPower(0.0);
-
-        }
-
-        if(!leftButton){
-
-            backLeft.setPower(motorFour);
-            frontLeft.setPower(motorTwo);
-
-        }
-
-        else {
-
+            backRight.setPower(0.0);
             frontLeft.setPower(0.0);
             backLeft.setPower(0.0);
 
         }
 
-        if(rightButton && leftButton){
+    }
 
+    private void strafeToLine(double speed, double time){
+
+        if(!quickFix){currentTime = getRuntime();}
+
+        while(getRuntime() - time < strafeTime){
+
+            strafe(speed, "right");
+            quickFix = true;
+
+        }
+
+        if(lineColor.alpha() > white + colorOffset){
+
+            //move right
+            strafe(speed, "right");
+
+        }
+
+        else{
+
+            //stop and press button
+            frontRight.setPower(0.0);
+            backRight.setPower(0.0);
+            frontLeft.setPower(0.0);
+            backLeft.setPower(0.0);
+
+            pressBeaconButton();
+
+        }
+
+    }
+
+    private void shoot(){
+
+        double speed;
+        currentShootPosition = shooter.getCurrentPosition();
+
+        //TODO set it up so that the arm does not rotate when you start
+        //-----------this part is new------------\\
+        if(currentShootPosition - previousShootPosition <= shooterPosition){
+
+            speed = shooterSpeed;
+            //---------------added this too--------------\\
+            // previousShootPosition   = currentShootPosition;
+
+        }
+        //this is where you press the button and it shoots
+        else if(currentShootPosition - previousShootPosition >= shooterPosition){
+
+            speed                   = shooterSpeed;
+            previousShootPosition   = currentShootPosition;
+
+        }
+        else{speed = 0.0;}
+
+        shooter.setPower(speed);
+
+    }
+
+    private void pressBeaconButton() {
+
+        leftButton  = leftSwitch.isPressed();
+        rightButton = rightSwitch.isPressed();
+
+        if(beaconColor.blue() == 1){
+
+            rightButtonServo.setPosition(rBeaconPositionOut);
+
+        }
+        else {
+
+            leftButtonServo.setPosition(lBeaconPositionOut);
+
+        }
+
+        keepItOnWall(0.5);
+
+        if(leftButtonServo.getPosition() == lBeaconPositionOut || rightButtonServo.getPosition() == rBeaconPositionOut){
+
+            leftButtonServo.setPosition(lBeaconPositionIn);
+            rightButtonServo.setPosition(rBeaconPositionIn);
             value++;
 
         }
 
-
-
     }
 
-    private void encoderDrive(double speed, double leftInches, double rightInches, double timeoutS) {
+    private void encoderDrive(double speed, double leftInches, double rightInches, double timeoutS, int heading) {
         int newLeftTarget;
         int newRightTarget;
 
@@ -288,6 +364,9 @@ public class RJAuto extends LinearOpMode {
             backRight.setPower(0);
             backLeft.setPower(0);
 
+            //add one to the value
+            value++;
+
             // Turn off RUN_TO_POSITION
             frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -297,6 +376,7 @@ public class RJAuto extends LinearOpMode {
     }
 
     private void gyroRotate(double speed, int heading) {
+
         while(gyro.getHeading() < heading - headingOffset || gyro.getHeading() > heading + headingOffset){
 
             frontRight.setPower(speed);
@@ -311,6 +391,7 @@ public class RJAuto extends LinearOpMode {
         frontLeft.setPower(0.0);
         backRight.setPower(0.0);
         backLeft.setPower(0.0);
+        headingEncoder = heading;
         value++;
 
     }
@@ -336,38 +417,39 @@ public class RJAuto extends LinearOpMode {
             frontRight.setPower(0.0);
             backRight.setPower(0.0);
         }
+        if(rightButton && leftButton){value++;}
+
+
+    }private void keepItOnWall(double speed){
+
+        leftButton  = leftSwitch.isPressed();
+        rightButton = rightSwitch.isPressed();
+
+        if(!leftButton){
+            frontLeft.setPower(speed);
+            backLeft.setPower(speed);
+        }
+        else if(leftButton){
+            frontLeft.setPower(0.0);
+            backLeft.setPower(0.0);
+        }
+        if(!rightButton){
+            frontRight.setPower(-speed);
+            backRight.setPower(-speed);
+        }
+        else if(rightButton){
+            frontRight.setPower(0.0);
+            backRight.setPower(0.0);
+        }
 
 
     }
 
-    double stabalizeRobo(int heading) {
+    private double stabalizeRobo(int heading) {
 
         double gyroOffset = (gyro.getIntegratedZValue()-heading)*turnPower;
 
         return gyroOffset;
-
-    }
-
-    private void gyrostuff(){
-
-        // if the A and B buttons are pressed just now, reset Z heading.
-        curResetState = (gamepad1.a && gamepad1.b);
-        if(curResetState && !lastResetState)  {
-            gyro.resetZAxisIntegrator();
-        }
-        lastResetState = curResetState;
-
-        // get the x, y, and z values (rate of change of angle).
-        xVal = gyro.rawX();
-        yVal = gyro.rawY();
-        zVal = gyro.rawZ();
-
-        // get the heading info.
-        // the Modern Robotics' gyro sensor keeps
-        // track of the current heading for the Z axis only.
-        heading = gyro.getHeading();
-        angleZ  = gyro.getIntegratedZValue();
-
 
     }
 
