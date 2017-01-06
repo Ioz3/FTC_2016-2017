@@ -18,7 +18,7 @@ public class SamTest extends LinearOpMode {
         motor       = hardwareMap.dcMotor.get("MOTOR");
         touchSensor = hardwareMap.touchSensor.get("sensor_touch");
         colorSensor = hardwareMap.colorSensor.get("color_sensor");
-        colorSensor.enableLed(true);
+        colorSensor.enableLed(false);
 
     }
     public void runOpMode () {
@@ -27,6 +27,7 @@ public class SamTest extends LinearOpMode {
 
         waitForStart();
 
+        colorSensor.enableLed(true);
 
         while(opModeIsActive()){
 
@@ -41,7 +42,7 @@ public class SamTest extends LinearOpMode {
     public void debug(){
 
         telemetry.addData("touch_sensor_isPressed", touchSensor.isPressed());
-        telemetry.addData("color", colorSensor.argb());
+        telemetry.addData("color", colorSensor.red());
         telemetry.update();
 
     }

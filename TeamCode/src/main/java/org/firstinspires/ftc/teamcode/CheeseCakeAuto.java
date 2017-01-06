@@ -6,6 +6,11 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 /**
  * Created by cicada03 on 12/21/16.
+ *
+ * TODO: need to set a wait time for the team members auto to kick in
+ * must have a delay for the team members auto to start so we can
+ * sync it with our own auto
+ *
  */
 @Autonomous(name = "CheeseCakeAuto", group = "Auto")
 public class CheeseCakeAuto extends LinearOpMode {

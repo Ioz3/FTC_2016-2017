@@ -25,9 +25,9 @@ public class RJAuto extends LinearOpMode {
     private DcMotor shooter;
 
     //servo
-    private Servo   rightButtonServo;
-    private Servo   leftButtonServo;
-    private Servo   loadFront;
+    private Servo rightButtonServo;
+    private Servo leftButtonServo;
+    private Servo loadFront;
 
     //gyro
     ModernRoboticsI2cGyro gyro;
@@ -56,6 +56,12 @@ public class RJAuto extends LinearOpMode {
     private int    currentShootPosition;
     private int    previousShootPosition;
 
+    //reload
+    private double  loadFrontPosUp;
+    private double  loadFrontPosDown;
+    private double  loadFrontTime;
+    private boolean loadIsReady;
+
     //beacon
     private double  lBeaconPositionIn;
     private double  lBeaconPositionOut;
@@ -68,40 +74,21 @@ public class RJAuto extends LinearOpMode {
 
     //color sensor
     private double colorOffset;
-    private double white;
+    private double red;
 
     //gyro rotate
     private boolean curResetState;
     private boolean lastResetState;
-    private int  headingEncoder;
+    private int     headingEncoder;
     private int     headingOffset;
     private double  turnPower;
 
     private double currentTime;
     private double strafeTime;
+    private double strafeSpeed;
     private boolean quickFix;
 
     int    value = 1;
-
-    public void runOpMode()  {
-
-        roboInit();
-
-        gyroInit();
-
-        waitForStart();
-
-        //our main teleop loop
-        while(opModeIsActive()) {
-
-            beaconSwitchCase();
-            debug();
-
-            idle();
-
-        }
-
-    }
 
     public void roboInit(){
 
@@ -119,6 +106,9 @@ public class RJAuto extends LinearOpMode {
         leftButtonServo     = hardwareMap.servo.get("LEFT_BUTTON");
         loadFront           = hardwareMap.servo.get("LOAD_FRONT");
 
+        //MOTOR REVERSE
+        shooter.setDirection(DcMotor.Direction.REVERSE);
+
         //GYRO INIT
         gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("GYRO");
 
@@ -126,8 +116,9 @@ public class RJAuto extends LinearOpMode {
         lineColor   = hardwareMap.colorSensor.get("LINE_COLOR");
         beaconColor = hardwareMap.colorSensor.get("BEACON_COLOR");
         beaconColor.enableLed(false);
-        colorOffset = 10;
-        white       = 30.0;
+        lineColor.enableLed(false);
+        colorOffset = 0;
+        red       = 2.0;
 
         //TOUCH SENSOR
         leftSwitch  = hardwareMap.touchSensor.get("LEFT_TOUCH");
@@ -142,8 +133,16 @@ public class RJAuto extends LinearOpMode {
         leftButtonServo.setPosition(lBeaconPositionIn);
 
         //SHOOTER
-        shooterSpeed     = 1.0;
-        shooterPosition  = 3400;
+        shooterSpeed            = 1.0;
+        previousShootPosition   = 0;
+        shooterPosition         = 3400;
+
+        //RELOAD VARIABLES
+        loadFrontPosUp      = 0.0;
+        loadFrontPosDown    = 1.0;
+        loadFrontTime       = 0.5;
+        loadIsReady         = false;
+        loadFront.setPosition(loadFrontPosDown);
 
         //TOUCH SENSOR
         leftButton  = false;
@@ -157,8 +156,32 @@ public class RJAuto extends LinearOpMode {
         turnPower       = 0.02;
 
         //STRAFE
-        strafeTime  = 0.5;
+        strafeTime  = 0.3;
+        strafeSpeed = 0.5;
         quickFix    = false;
+
+    }
+
+    public void runOpMode()  {
+
+        roboInit();
+
+        gyroInit();
+
+        lineColor.enableLed(false);
+        beaconColor.enableLed(false);
+
+        waitForStart();
+
+        //our main teleop loop
+        while(opModeIsActive()) {
+
+            beaconSwitchCase();
+            debug();
+
+            idle();
+
+        }
 
     }
 
@@ -184,17 +207,29 @@ public class RJAuto extends LinearOpMode {
 
         switch(value){
 
-            case 1: encoderDrive(DRIVE_SPEED,  42,  -42, 3.0, headingEncoder);
+            case 1: encoderDrive(DRIVE_SPEED,  22.5,  -22.5, 1.5, headingEncoder);
                 break;
-            case 2: gyroRotate(-0.5, 280);
+            case 2: shoot();
                 break;
-            case 3: encoderDrive(DRIVE_SPEED,  55,  -55, 4.0, headingEncoder);
+            case 3: reload();
                 break;
-            case 4: moveToWall(0.3);
+            case 4: shoot();
                 break;
-            case 5: //strafeToLine(0.5,currentTime);
+            case 5: encoderDrive(DRIVE_SPEED,  21.25,  -21.25, 1.5, headingEncoder);
                 break;
-            case 6: //currentTime = getRuntime();while(getRuntime() - currentTime < 5.0)strafe(0.5, "left");value++;
+            case 6: gyroRotate(-0.5, 280);
+                break;
+            case 7: encoderDrive(DRIVE_SPEED,  25,  -25, 2.0, headingEncoder);
+                break;
+            case 8: moveToWall(0.3);
+                break;
+            case 9: strafeToLine(0.5,currentTime);
+                break;
+            case 10: currentTime = getRuntime();while(getRuntime() - currentTime < 2.0)strafe(0.5, "right");value++;
+                break;
+            case 11: strafeToLine(0.5,currentTime);
+                break;
+            case 12: currentTime = getRuntime();while(getRuntime() - currentTime < 5.0)strafe(0.5, "left");value++;
                 break;
             default:frontLeft.setPower(0.0);frontRight.setPower(0.0);backLeft.setPower(0.0);backRight.setPower(0.0);
                 break;
@@ -238,86 +273,80 @@ public class RJAuto extends LinearOpMode {
 
         if(!quickFix){currentTime = getRuntime();}
 
-        while(getRuntime() - time < strafeTime){
+        while(beaconColor.red() < red + colorOffset && opModeIsActive()){//getRuntime() - currentTime < strafeTime && !quickFix){
 
             strafe(speed, "right");
-            quickFix = true;
+            debug();
 
         }
 
-        if(lineColor.alpha() > white + colorOffset){
+        quickFix = true;
+
+        while(beaconColor.red() < red + colorOffset && opModeIsActive()){
 
             //move right
             strafe(speed, "right");
 
         }
 
-        else{
+        //stop and press button
+        frontRight.setPower(0.0);
+        backRight.setPower(0.0);
+        frontLeft.setPower(0.0);
+        backLeft.setPower(0.0);
 
-            //stop and press button
-            frontRight.setPower(0.0);
-            backRight.setPower(0.0);
-            frontLeft.setPower(0.0);
-            backLeft.setPower(0.0);
+        pressBeaconButton(0.5);
 
-            pressBeaconButton();
-
-        }
+        quickFix = false;
 
     }
 
     private void shoot(){
 
-        double speed;
-        currentShootPosition = shooter.getCurrentPosition();
+        while(shooter.getCurrentPosition() - previousShootPosition < shooterPosition && opModeIsActive()){
 
-        //TODO set it up so that the arm does not rotate when you start
-        //-----------this part is new------------\\
-        if(currentShootPosition - previousShootPosition <= shooterPosition){
-
-            speed = shooterSpeed;
-            //---------------added this too--------------\\
-            // previousShootPosition   = currentShootPosition;
+            shooter.setPower(shooterSpeed);
+            telemetry.addData("encoder_data", shooter.getCurrentPosition());
+            telemetry.update();
 
         }
-        //this is where you press the button and it shoots
-        else if(currentShootPosition - previousShootPosition >= shooterPosition){
 
-            speed                   = shooterSpeed;
-            previousShootPosition   = currentShootPosition;
+        previousShootPosition = shooter.getCurrentPosition();
+
+        shooter.setPower(0.0);
+        value++;
+    }
+
+    private void reload(){
+
+        currentTime = getRuntime();
+
+        while(getRuntime() - currentTime < loadFrontTime){
+
+            loadFront.setPosition(loadFrontPosUp);
+            intake.setPower(1.0);
 
         }
-        else{speed = 0.0;}
 
-        shooter.setPower(speed);
+        loadFront.setPosition(loadFrontPosDown);
+        intake.setPower(0.0);
+        value++;
 
     }
 
-    private void pressBeaconButton() {
+    private void pressBeaconButton(double time) {
 
-        leftButton  = leftSwitch.isPressed();
-        rightButton = rightSwitch.isPressed();
+        currentTime = getRuntime();
 
-        if(beaconColor.blue() == 1){
+        while(getRuntime() - currentTime < time && opModeIsActive()){
 
             rightButtonServo.setPosition(rBeaconPositionOut);
-
-        }
-        else {
-
-            leftButtonServo.setPosition(lBeaconPositionOut);
+            keepItOnWall(0.3);
 
         }
 
-        keepItOnWall(0.5);
-
-        if(leftButtonServo.getPosition() == lBeaconPositionOut || rightButtonServo.getPosition() == rBeaconPositionOut){
-
-            leftButtonServo.setPosition(lBeaconPositionIn);
-            rightButtonServo.setPosition(rBeaconPositionIn);
-            value++;
-
-        }
+        rightButtonServo.setPosition(rBeaconPositionIn);
+        value++;
 
     }
 
@@ -377,7 +406,7 @@ public class RJAuto extends LinearOpMode {
 
     private void gyroRotate(double speed, int heading) {
 
-        while(gyro.getHeading() < heading - headingOffset || gyro.getHeading() > heading + headingOffset){
+        while(gyro.getHeading() < heading - headingOffset || gyro.getHeading() > heading + headingOffset && opModeIsActive()){
 
             frontRight.setPower(speed);
             frontLeft.setPower(speed);
@@ -457,7 +486,7 @@ public class RJAuto extends LinearOpMode {
 
         currentTime = getRuntime();
 
-        while(getRuntime() - currentTime < time){
+        while(getRuntime() - currentTime < time && opModeIsActive()){
 
             frontLeft.setPower(0.0);frontRight.setPower(0.0);backLeft.setPower(0.0);backRight.setPower(0.0);
 
@@ -472,7 +501,7 @@ public class RJAuto extends LinearOpMode {
         telemetry.addData("HEADING", gyro.getHeading());
         telemetry.addData("INT_Z", gyro.getIntegratedZValue());
 
-        telemetry.addData("CHECK_LINE_COLOR", lineColor.alpha());
+        telemetry.addData("CHECK_LINE_COLOR", lineColor.red());
         telemetry.addData("CHECK_RED_COLOR", beaconColor.red());
         telemetry.addData("CHECK_BLUE_COLOR", beaconColor.blue());
 
