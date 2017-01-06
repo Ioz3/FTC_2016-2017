@@ -219,22 +219,47 @@ public class RJAuto extends LinearOpMode {
                 break;
             case 6: gyroRotate(-0.5, 280);
                 break;
-            case 7: encoderDrive(DRIVE_SPEED,  25,  -25, 2.0, headingEncoder);
+            case 7: moveToWall(0.5);
                 break;
-            case 8: moveToWall(0.3);
+            case 8: strafeToLine(0.5,currentTime);
                 break;
-            case 9: strafeToLine(0.5,currentTime);
+            case 9: currentTime = getRuntime();while(getRuntime() - currentTime < 2.0 && opModeIsActive())strafe(0.5, "right");value++;
                 break;
-            case 10: currentTime = getRuntime();while(getRuntime() - currentTime < 2.0)strafe(0.5, "right");value++;
+            case 10: strafeToLine(0.5,currentTime);
                 break;
-            case 11: strafeToLine(0.5,currentTime);
+            case 11: currentTime = getRuntime();while(getRuntime() - currentTime < 5.0 && opModeIsActive())strafe(0.5, "left");value++;
                 break;
-            case 12: currentTime = getRuntime();while(getRuntime() - currentTime < 5.0)strafe(0.5, "left");value++;
+            case 12: moveToWall(0.3);
+                break;
+            case 13: currentTime = getRuntime();while(getRuntime()-currentTime < 3.0 && opModeIsActive()){robotDrive(-0.3, 0.3);}robotStop();value++;
+                break;
+            case 14: gyroRotate(-0.5, 240);
+                break;
+            case 15: currentTime = getRuntime();while(getRuntime()-currentTime < 3.5 && opModeIsActive()){robotDrive(1.0, -1.0);}robotStop();value++;
                 break;
             default:frontLeft.setPower(0.0);frontRight.setPower(0.0);backLeft.setPower(0.0);backRight.setPower(0.0);
                 break;
 
         }
+
+    }
+
+    private void robotStop(){
+
+        frontRight.setPower(0.0);
+        backRight.setPower(0.0);
+        frontLeft.setPower(0.0);
+        backLeft.setPower(0.0);
+
+
+    }
+
+    private void robotDrive(double left, double right){
+
+        frontRight.setPower(right);
+        backRight.setPower(right);
+        frontLeft.setPower(left);
+        backLeft.setPower(left);
 
     }
 
@@ -260,10 +285,7 @@ public class RJAuto extends LinearOpMode {
 
         else{
 
-            frontRight.setPower(0.0);
-            backRight.setPower(0.0);
-            frontLeft.setPower(0.0);
-            backLeft.setPower(0.0);
+            robotStop();
 
         }
 
